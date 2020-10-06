@@ -11,13 +11,14 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <sstream>
 using namespace std;
 
 // Clase donde tendremos almacenado cada linea del archivo
 class Usuarios{
 public:
     string linea;
-    int ip;
+    long long ip;
 };
 
 // Nodo simple
@@ -66,17 +67,30 @@ public:
 // Declaracion de funciones
 void lecturaVariables(LinkedList& ll);
 Usuarios dividirLinea(string linea);
-int crearIP(string ip);
+long long crearIP(string ip);
 Node* merge(Node* left, Node* rigth);
 Node* ordenaMerge(Node* head);
+Node* binarySearch(Node *head, long long value);
 
 // Menu principal
 int main(int argc, const char * argv[]) {
-    
     LinkedList ll;
+    ofstream f("registro.txt");
+    
     lecturaVariables(ll);
     ordenaMerge(ll.head);
     ll.print();
+    
+    cout << "----------------------------------------------" << endl;
+    
+    Node* first = binarySearch(ll.head, 8975398406);
+    Node* last = binarySearch(ll.head, 9908771521);
+    
+    while(first != last->next){
+        cout << first->data.ip << endl;
+        first = first->next;
+    }
+
 }
 
 // Leer todo el archivo y asignar IDs a cada usuario
@@ -111,8 +125,7 @@ Usuarios dividirLinea(string linea) {
 }
 
 // Crear el ID del usuario recibiendo los datos necesarios
-int crearIP(string ip){
-    // 898.7.504.9:4058
+long long crearIP(string ip){
     string ipnuevo, ultimo, temp;
     vector<string> variables;
     stringstream ss(ip);
@@ -140,23 +153,25 @@ int crearIP(string ip){
     else ipnuevo = ipnuevo + "0" + temp;
     
     //cout << "ipnuevo: "<< ipnuevo << endl;
-    
-    return atoi(ipnuevo.c_str());
+    stringstream geek(ipnuevo);
+    long long x = 0;
+    geek >> x;
+    return x;
 }
 
 // Funcion 2 de ordenamiento merge
-Node* merge(Node* left, Node* rigth){
+Node* merge(Node* left, Node* right){
     Usuarios persona;
     Node* ordenado = new Node(persona);
     Node* actual = ordenado;
     
-    while(left != NULL && rigth != NULL){
-        if(left->data.ip < rigth->data.ip){
+    while(left != NULL && right != NULL){
+        if(left->data.ip < right->data.ip){
             actual->next = left;
             left = left->next;
         } else {
-            actual->next = rigth;
-            rigth = rigth->next;
+            actual->next = right;
+            right = right->next;
         }
         actual = actual->next;
     }
@@ -165,9 +180,9 @@ Node* merge(Node* left, Node* rigth){
         actual->next = left;
         left = left->next;
     }
-    if(rigth != NULL){
-        actual->next = rigth;
-        rigth = rigth->next;
+    if(right != NULL){
+        actual->next = right;
+        right = right->next;
     }
     return ordenado->next;
 }
@@ -187,8 +202,39 @@ Node* ordenaMerge(Node* head){
     }
    temp->next = NULL;
    Node* left = ordenaMerge(head);
-   Node* rigth = ordenaMerge(slow);
+   Node* right = ordenaMerge(slow);
     
-   return merge(left,rigth);
+   return merge(left,right);
     
+}
+
+// Funcion binary search para encontrar la IP de la fecha esperada con mayor rapidez
+Node* binarySearch(Node *head, long long value){
+    Node* start = head;
+    Node* last = NULL;
+    do{
+        if (start == NULL)
+           return NULL;
+        struct Node* slow = start;
+        struct Node* fast = start -> next;
+        while (fast != last){
+           fast = fast -> next;
+           if (fast != last){
+              slow = slow -> next;
+              fast = fast -> next;
+           }
+        }
+       Node* mid = slow;
+       if (mid == NULL)
+          return NULL;
+       if (mid->data.ip == value)
+          return mid;
+       else if (mid->data.ip < value)
+          start = mid -> next;
+       else
+          last = mid;
+    }
+    while (last == NULL || last != start);
+       return NULL;
+   
 }
