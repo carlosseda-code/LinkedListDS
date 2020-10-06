@@ -22,39 +22,42 @@ public:
 };
 
 // Nodo simple
-class Node{
+class NodeDouble{
 public:
     Usuarios data;
-    Node *next;
-    Node(Usuarios data){
+    NodeDouble *next;
+    NodeDouble *prev;
+    NodeDouble(Usuarios data){
         this->data = data;
         next = NULL;
+        prev = NULL;
     }
 };
 
-// Singly LinkedList
+// Doubly LinkedList
 class LinkedList{
 public:
-    Node *head;
+    NodeDouble *head;
     LinkedList(){
         head = NULL;
     }
     
-    void addLast(Node* n){
+    void addLast(NodeDouble* n){
         if(head == NULL)
             head = n;
         else {
-            Node* prev = head;
+            NodeDouble* prev = head;
             while (prev->next != NULL)
                 prev = prev->next;
             prev->next = n;
+            n->prev = prev;
         }
     }
     void print(){
         if (head == NULL)
             cout << "Lista vacia" << endl;
         else{
-            Node *last = head;
+            NodeDouble *last = head;
             while(last != NULL){
                 cout << last->data.ip << endl;
                 last = last->next;
@@ -68,9 +71,9 @@ public:
 void lecturaVariables(LinkedList& ll);
 Usuarios dividirLinea(string linea);
 long long crearIP(string ip);
-Node* merge(Node* left, Node* rigth);
-Node* ordenaMerge(Node* head);
-Node* binarySearch(Node *head, long long value);
+NodeDouble* merge(NodeDouble* left, NodeDouble* rigth);
+NodeDouble* ordenaMerge(NodeDouble* head);
+NodeDouble* binarySearch(NodeDouble *head, long long value);
 
 // Menu principal
 int main(int argc, const char * argv[]) {
@@ -81,7 +84,7 @@ int main(int argc, const char * argv[]) {
     
     lecturaVariables(ll);
     ordenaMerge(ll.head);
-    
+    ll.print();
     cout << "------------Registros de acceso------------" << endl;
     cout << "¿Desde que IP le gustaria ver los registro? (000.00.000.00 - 999.99.999.99)" << endl;
     while(cont == 0){
@@ -99,20 +102,20 @@ int main(int argc, const char * argv[]) {
         cont++;
     }
     cout << "-------------Buscando archivos-------------" << endl;
+    
     ip1 = ip1 + ':';
     ip2 = ip2 + ':';
-    
     long long ipinicio = crearIP(ip1);
     long long ipfin = crearIP(ip2);
-
+    
     if(ipfin < ipinicio || ipfin < ll.head->data.ip){
         cout << "Mal ingreso de IP's" << endl;
         cout << "Saliendo del sistema...." << endl;
         return 1;
     }
     
-    Node* first = binarySearch(ll.head, ipinicio);
-    Node* last = binarySearch(ll.head, ipfin);
+    NodeDouble* first = binarySearch(ll.head, ipinicio);
+    NodeDouble* last = binarySearch(ll.head, ipfin);
     
     while(first != last){
         cout << "Registro #"<< numero << ": " << first->data.linea << endl;
@@ -132,7 +135,7 @@ void lecturaVariables(LinkedList& ll){
     archivo.open("bitacora.txt");
     while (getline(archivo, linea)){
         persona = dividirLinea(linea);
-        Node* n= new Node(persona);
+        NodeDouble* n= new NodeDouble(persona);
         ll.addLast(n);
     }
         archivo.close();
@@ -170,7 +173,7 @@ long long crearIP(string ip){
     if (stoi(variables[1]) >= 10 || variables[1] == "00")
         ipnuevo = ipnuevo + variables[1];
     else ipnuevo = ipnuevo + "0" + variables[1];
-    if (stoi(variables[2]) >= 10 || variables[2] == "000")
+    if (stoi(variables[2]) >= 10 || variables[2] == "00" || variables[2] == "000")
         ipnuevo = ipnuevo + variables[2];
     else ipnuevo = ipnuevo + "0" + variables[2];
     ultimo = variables[3];
@@ -179,11 +182,11 @@ long long crearIP(string ip){
         temp = temp + ultimo[i];
         i++;
     }
+    
     if (stoi(temp) >= 10 || temp == "00")
         ipnuevo = ipnuevo + temp;
-    else ipnuevo = ipnuevo + "00" + temp;
+    else ipnuevo = ipnuevo + "0" + temp;
     
-    //cout << "ipnuevo: "<< ipnuevo << endl;
     stringstream geek(ipnuevo);
     long long x = 0;
     geek >> x;
@@ -191,40 +194,48 @@ long long crearIP(string ip){
 }
 
 // Funcion 2 de ordenamiento merge
-Node* merge(Node* left, Node* right){
+NodeDouble* merge(NodeDouble* left, NodeDouble* right){
     Usuarios persona;
-    Node* ordenado = new Node(persona);
-    Node* actual = ordenado;
+    NodeDouble* ordenado = new NodeDouble(persona);
+    NodeDouble* actual = ordenado;
     
     while(left != NULL && right != NULL){
         if(left->data.ip < right->data.ip){
             actual->next = left;
+            actual->next->prev = actual;
             left = left->next;
+            actual->prev = NULL;
         } else {
             actual->next = right;
+            actual->next->prev = actual;
             right = right->next;
+            actual->prev = NULL;
         }
         actual = actual->next;
     }
     
     if(left != NULL){
         actual->next = left;
+        actual->next->prev = actual;
         left = left->next;
+        actual->prev = NULL;
     }
     if(right != NULL){
         actual->next = right;
+        actual->next->prev = actual;
         right = right->next;
+        actual->prev = NULL;
     }
     return ordenado->next;
 }
 
 // Con esta funcion ordenaremos todos los ids de forma ascendente
-Node* ordenaMerge(Node* head){
+NodeDouble* ordenaMerge(NodeDouble* head){
     if(head == NULL || head->next == NULL)
         return head;
-    Node* temp = head;
-    Node* slow = head;
-    Node* fast = head;
+    NodeDouble* temp = head;
+    NodeDouble* slow = head;
+    NodeDouble* fast = head;
     
     while(fast != NULL && fast->next != NULL){
         temp = slow;
@@ -232,23 +243,24 @@ Node* ordenaMerge(Node* head){
         fast = fast->next->next;
     }
    temp->next = NULL;
-   Node* left = ordenaMerge(head);
-   Node* right = ordenaMerge(slow);
+    
+    NodeDouble* left = ordenaMerge(head);
+    NodeDouble* right = ordenaMerge(slow);
     
    return merge(left,right);
     
 }
 
 // Funcion binary search para encontrar la IP de la fecha esperada con mayor rapidez
-Node* binarySearch(Node *head, long long value){
-    Node* start = head;
-    Node* last = NULL;
-    Node* first_ocurr = NULL;
+NodeDouble* binarySearch(NodeDouble *head, long long value){
+    NodeDouble* start = head;
+    NodeDouble* last = NULL;
+    NodeDouble* first_ocurr = NULL;
     while(start != last){
         if (start == NULL)
            return NULL;
-        struct Node* slow = start;
-        struct Node* fast = start -> next;
+        NodeDouble* slow = start;
+        NodeDouble* fast = start -> next;
         while (fast != last){
            fast = fast -> next;
            if (fast != last){
@@ -256,7 +268,7 @@ Node* binarySearch(Node *head, long long value){
               fast = fast -> next;
            }
         }
-       Node* mid = slow;
+        NodeDouble* mid = slow;
         if(mid->data.ip >= value){
             first_ocurr = mid;
             last = mid;
