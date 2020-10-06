@@ -75,22 +75,53 @@ Node* binarySearch(Node *head, long long value);
 // Menu principal
 int main(int argc, const char * argv[]) {
     LinkedList ll;
+    int cont = 0, numero = 1;
+    string ip1, ip2;
     ofstream f("registro.txt");
     
     lecturaVariables(ll);
     ordenaMerge(ll.head);
-    ll.print();
     
-    cout << "----------------------------------------------" << endl;
+    cout << "------------Registros de acceso------------" << endl;
+    cout << "¿Desde que IP le gustaria ver los registro? (000.00.000.00 - 999.99.999.99)" << endl;
+    while(cont == 0){
+    cout << "IP de inicio: ";
+    cin >> ip1;
+    if (ip1.length()>= 11 && ip1.length() <= 13)
+        cont++;
+    }
+    cont = 0;
+    cout << "¿Y hasta que IP? (000.00.000.00 - 999.99.999.99)" << endl;
+    while(cont == 0){
+    cout << "IP de fin: ";
+    cin >> ip2;
+    if (ip2.length()>= 11 && ip2.length() <= 13)
+        cont++;
+    }
+    cout << "-------------Buscando archivos-------------" << endl;
+    ip1 = ip1 + ':';
+    ip2 = ip2 + ':';
     
-    Node* first = binarySearch(ll.head, 8975398406);
-    Node* last = binarySearch(ll.head, 9908771521);
+    long long ipinicio = crearIP(ip1);
+    long long ipfin = crearIP(ip2);
+
+    if(ipfin < ipinicio || ipfin < ll.head->data.ip){
+        cout << "Mal ingreso de IP's" << endl;
+        cout << "Saliendo del sistema...." << endl;
+        return 1;
+    }
     
-    while(first != last->next){
-        cout << first->data.ip << endl;
+    Node* first = binarySearch(ll.head, ipinicio);
+    Node* last = binarySearch(ll.head, ipfin);
+    
+    while(first != last){
+        cout << "Registro #"<< numero << ": " << first->data.linea << endl;
+        if (f.is_open())
+        f << first->data.linea << endl;
+        else cerr << "Error de apertura del archivo." << endl;
+        numero++;
         first = first->next;
     }
-
 }
 
 // Leer todo el archivo y asignar IDs a cada usuario
@@ -136,10 +167,10 @@ long long crearIP(string ip){
         variables.push_back(dato);
     
     ipnuevo = ipnuevo + variables[0];
-    if (stoi(variables[1]) >= 10)
+    if (stoi(variables[1]) >= 10 || variables[1] == "00")
         ipnuevo = ipnuevo + variables[1];
     else ipnuevo = ipnuevo + "0" + variables[1];
-    if (stoi(variables[2]) >= 10)
+    if (stoi(variables[2]) >= 10 || variables[2] == "000")
         ipnuevo = ipnuevo + variables[2];
     else ipnuevo = ipnuevo + "0" + variables[2];
     ultimo = variables[3];
@@ -148,9 +179,9 @@ long long crearIP(string ip){
         temp = temp + ultimo[i];
         i++;
     }
-    if (stoi(temp) >= 10)
+    if (stoi(temp) >= 10 || temp == "00")
         ipnuevo = ipnuevo + temp;
-    else ipnuevo = ipnuevo + "0" + temp;
+    else ipnuevo = ipnuevo + "00" + temp;
     
     //cout << "ipnuevo: "<< ipnuevo << endl;
     stringstream geek(ipnuevo);
@@ -212,7 +243,8 @@ Node* ordenaMerge(Node* head){
 Node* binarySearch(Node *head, long long value){
     Node* start = head;
     Node* last = NULL;
-    do{
+    Node* first_ocurr = NULL;
+    while(start != last){
         if (start == NULL)
            return NULL;
         struct Node* slow = start;
@@ -225,16 +257,12 @@ Node* binarySearch(Node *head, long long value){
            }
         }
        Node* mid = slow;
-       if (mid == NULL)
-          return NULL;
-       if (mid->data.ip == value)
-          return mid;
-       else if (mid->data.ip < value)
-          start = mid -> next;
-       else
-          last = mid;
+        if(mid->data.ip >= value){
+            first_ocurr = mid;
+            last = mid;
+        }else start = mid -> next;
     }
-    while (last == NULL || last != start);
-       return NULL;
+  
+       return first_ocurr;
    
 }
