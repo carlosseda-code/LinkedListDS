@@ -84,7 +84,7 @@ int main(int argc, const char * argv[]) {
     
     lecturaVariables(ll);
     ordenaMerge(ll.head);
-    ll.print();
+    
     cout << "------------Registros de acceso------------" << endl;
     cout << "¿Desde que IP le gustaria ver los registro? (000.00.000.00 - 999.99.999.99)" << endl;
     while(cont == 0){
